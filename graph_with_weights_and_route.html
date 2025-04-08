@@ -1,0 +1,179 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+             #config {
+                 float: left;
+                 width: 400px;
+                 height: 600px;
+             }
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+            <div id="config"></div>
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#1f78b4", "id": "Location 11", "label": "Location 11", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 9", "label": "Location 9", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 4", "label": "Location 4", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 34", "label": "Location 34", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 39", "label": "Location 39", "shape": "dot"}, {"color": "red", "id": "Location 25", "label": "Location 25", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 22", "label": "Location 22", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 13", "label": "Location 13", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 46", "label": "Location 46", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 15", "label": "Location 15", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"arrows": "", "color": "#999", "from": "Location 11", "label": "5.9", "length": 29.5, "physics": false, "smooth": false, "title": "Weight: 5.9", "to": "Location 13"}, {"arrows": "", "color": "#999", "from": "Location 11", "label": "4.0", "length": 20.0, "physics": false, "smooth": false, "title": "Weight: 4.0", "to": "Location 15"}, {"arrows": "", "color": "#999", "from": "Location 11", "label": "4.0", "length": 20.0, "physics": false, "smooth": false, "title": "Weight: 4.0", "to": "Location 15"}, {"arrows": "", "color": "#999", "from": "Location 11", "label": "1.6", "length": 10, "physics": false, "smooth": false, "title": "Weight: 1.6", "to": "Location 39"}, {"arrows": "", "color": "#999", "from": "Location 9", "label": "4.2", "length": 21.0, "physics": false, "smooth": false, "title": "Weight: 4.2", "to": "Location 4"}, {"arrows": "", "color": "#999", "from": "Location 9", "label": "1.9", "length": 10, "physics": false, "smooth": false, "title": "Weight: 1.9", "to": "Location 13"}, {"arrows": "", "color": "#999", "from": "Location 4", "label": "8.0", "length": 40.0, "physics": false, "smooth": false, "title": "Weight: 8.0", "to": "Location 22"}, {"arrows": "", "color": "#999", "from": "Location 4", "label": "2.3", "length": 11.5, "physics": false, "smooth": false, "title": "Weight: 2.3", "to": "Location 13"}, {"arrows": "", "color": "#999", "from": "Location 4", "label": "2.3", "length": 11.5, "physics": false, "smooth": false, "title": "Weight: 2.3", "to": "Location 13"}, {"arrows": "", "color": "#999", "from": "Location 34", "label": "5.8", "length": 29.0, "physics": false, "smooth": false, "title": "Weight: 5.8", "to": "Location 15"}, {"arrows": "", "color": "#999", "from": "Location 34", "label": "8.8", "length": 44.0, "physics": false, "smooth": false, "title": "Weight: 8.8", "to": "Location 46"}, {"arrows": "", "color": "#999", "from": "Location 34", "label": "2.8", "length": 14.0, "physics": false, "smooth": false, "title": "Weight: 2.8", "to": "Location 39"}, {"arrows": "", "color": "#999", "from": "Location 34", "label": "2.8", "length": 14.0, "physics": false, "smooth": false, "title": "Weight: 2.8", "to": "Location 39"}, {"arrows": "", "color": "#999", "from": "Location 39", "label": "7.1", "length": 35.5, "physics": false, "smooth": false, "title": "Weight: 7.1", "to": "Location 22"}, {"arrows": "", "color": "#999", "from": "Location 25", "label": "6.0", "length": 30.0, "physics": false, "smooth": false, "title": "Weight: 6.0", "to": "Location 46"}, {"arrows": "", "color": "#999", "from": "Location 25", "label": "3.1", "length": 15.5, "physics": false, "smooth": false, "title": "Weight: 3.1", "to": "Location 15"}, {"arrows": "to", "color": "orange", "from": "Location 25", "label": "1", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 1: Location 25 \u2192 Location 15", "to": "Location 15", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 15", "label": "2", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 2: Location 15 \u2192 Location 11", "to": "Location 11", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 11", "label": "3", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 3: Location 11 \u2192 Location 39", "to": "Location 39", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 39", "label": "4", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 4: Location 39 \u2192 Location 34", "to": "Location 34", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 34", "label": "5", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 5: Location 34 \u2192 Location 39", "to": "Location 39", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 39", "label": "6", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 6: Location 39 \u2192 Location 22", "to": "Location 22", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 22", "label": "7", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 7: Location 22 \u2192 Location 4", "to": "Location 4", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 4", "label": "8", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 8: Location 4 \u2192 Location 13", "to": "Location 13", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 13", "label": "9", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 9: Location 13 \u2192 Location 4", "to": "Location 4", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 4", "label": "10", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 10: Location 4 \u2192 Location 9", "to": "Location 9", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 9", "label": "11", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 11: Location 9 \u2192 Location 13", "to": "Location 13", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 13", "label": "12", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 12: Location 13 \u2192 Location 11", "to": "Location 11", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 11", "label": "13", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 13: Location 11 \u2192 Location 15", "to": "Location 15", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 15", "label": "14", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 14: Location 15 \u2192 Location 34", "to": "Location 34", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 34", "label": "15", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 15: Location 34 \u2192 Location 46", "to": "Location 46", "width": 3}, {"arrows": "to", "color": "orange", "from": "Location 46", "label": "16", "smooth": {"roundness": 0.3, "type": "curvedCW"}, "title": "Step 16: Location 46 \u2192 Location 25", "to": "Location 25", "width": 3}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": true,
+        "filter": [
+            "physics"
+        ]
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": false,
+        "forceAtlas2Based": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.0015,
+            "damping": 0.4,
+            "gravitationalConstant": -100,
+            "springConstant": 0.08,
+            "springLength": 100
+        },
+        "solver": "forceAtlas2Based",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+                  // if this network requires displaying the configure window,
+                  // put it in its div
+                  options.configure["container"] = document.getElementById("config");
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

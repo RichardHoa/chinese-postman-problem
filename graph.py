@@ -189,37 +189,47 @@ def print_postman_chinese_solution(G,start_node):
 
 # Function to visualize the graph
 def visualize_graph(G, route=None, starting_node=None):
-    # Step 1: Compute visit positions for each node (only if route is given)
-    position_map = defaultdict(list)
-    if route:
-        for idx, node in enumerate(route):
-            position_map[node].append(idx + 1)  # 1-based index
-
-    # Step 2: Create the graph
-    net = Network(notebook=False)
+    net = Network(notebook=False, directed=True)
     net.force_atlas_2based(gravity=-100, central_gravity=0.0015)
     net.toggle_physics(False)
     net.show_buttons(filter_=['physics'])
 
     # Add nodes
     for node in G.nodes():
-        # Append visit order only if route exists
-        visits = position_map.get(node, [])
-        visits_str = f" ({', '.join(map(str, visits))})" if visits else ""
-        label = f"{node}{visits_str}"
-
-        # Highlight starting node if specified
         color = "red" if node == starting_node else "#1f78b4"
-        net.add_node(node, label=label, color=color)
+        net.add_node(node, label=str(node), color=color)
 
-    # Add edges
+    # Add base edges WITH weight labels
     for u, v, data in G.edges(data=True):
         weight = data["weight"]
         edge_length = max(10, weight * 5)
-        net.add_edge(u, v, title=f"Length: {weight}", label=str(weight), length=edge_length, physics=False, smooth=False)
+        net.add_edge(
+            u, v,
+            title=f"Weight: {weight}",
+            label=str(weight),
+            length=edge_length,
+            physics=False,
+            smooth=False,
+            arrows='',  # no arrow for base edges
+            color="#999"  # gray base edge
+        )
 
-    # Save and open
-    output_file = "graph_with_visit_order.html"
+    # Add route arrows if given
+    if route:
+        for idx in range(len(route) - 1):
+            u, v = route[idx], route[idx + 1]
+            visit_num = idx + 1
+            net.add_edge(
+                u, v,
+                label=str(visit_num),  # show visit order above arrow
+                title=f"Step {visit_num}: {u} → {v}",
+                color="orange",
+                arrows="to",
+                width=3,
+                smooth={'type': 'curvedCW', 'roundness': 0.3}
+            )
+
+    output_file = "graph_with_weights_and_route.html"
     net.save_graph(output_file)
 
     file_path = f"file://{os.path.abspath(output_file)}"
