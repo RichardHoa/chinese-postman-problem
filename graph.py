@@ -4,6 +4,7 @@ from pyvis.network import Network
 import os
 import itertools
 from collections import defaultdict
+from networkx.algorithms.matching import min_weight_matching
 
 # List of 50 unique locations
 locations = [f"Location {i+1}" for i in range(50)]
@@ -13,7 +14,7 @@ graph_sizes = {"small": 10, "medium": 25, "large": 50}
 
 CHANCES = 0.5
 
-MAX_DEGREE = 3
+MAX_DEGREE = 10
 
 def generate_graph(size, max_degree=MAX_DEGREE):
     """Generates a connected graph with controlled max degree."""
@@ -85,19 +86,20 @@ def print_degree_distribution(G):
         percentage = round((count / total_nodes) * 100)  # Round up percentage
         print(f"{count} nodes have {degree} edges ({percentage}%)")
 
-def all_pairings(odd_vertices):
-    if len(odd_vertices) % 2 != 0:
-        raise ValueError("Number of odd vertices must be even.")
-    if len(odd_vertices) == 0:
-        return [[]]
 
-    pairings = []
-    first = odd_vertices[0]
-    for i in range(1, len(odd_vertices)):
-        rest = odd_vertices[1:i] + odd_vertices[i+1:]
-        for subpair in all_pairings(rest):
-            pairings.append([(first, odd_vertices[i])] + subpair)
-    return pairings
+def get_best_matching(G, odd_vertices):
+    # Step 1: Build complete graph of odd vertices with shortest path weights
+    complete_graph = nx.Graph()
+    for u, v in itertools.combinations(odd_vertices, 2):
+        try:
+            length = nx.dijkstra_path_length(G, u, v, weight='weight')
+            complete_graph.add_edge(u, v, weight=length)
+        except nx.NetworkXNoPath:
+            continue  # skip disconnected pairs
+
+    # Step 2: Use NetworkX's built-in min_weight_matching (Edmonds' algorithm)
+    matching = min_weight_matching(complete_graph)
+    return list(matching)
 
 def print_postman_chinese_solution(G,start_node):
     original_total_weight = sum(data['weight'] for u, v, data in G.edges(data=True))
@@ -122,34 +124,23 @@ def print_postman_chinese_solution(G,start_node):
             print("⚠️ Error finding Eulerian circuit:", e)
         return
 
-    # Step 2: Get all perfect matchings
-    matchings = all_pairings(odd_vertices)
+    # Step 2: Get best matching using Edmonds' algorithm
+    best_matching = get_best_matching(G, odd_vertices)
 
-    # Step 3–4: Find matching with minimum total shortest path weight
-    min_total_weight = float('inf')
-    best_matching = None
+    # Step 3–4: Compute shortest paths for the matching
+    min_total_weight = 0
     best_paths = []
 
-    for matching in matchings:
-        total_weight = 0
-        paths = []
-        for u, v in matching:
-            try:
-                length = nx.dijkstra_path_length(G, u, v, weight='weight')
-                path = nx.dijkstra_path(G, u, v, weight='weight')
-                total_weight += length
-                paths.append((u, v, path, length))
-            except nx.NetworkXNoPath:
-                total_weight = float('inf')
-                break
-        if total_weight < min_total_weight:
-            min_total_weight = total_weight
-            best_matching = matching
-            best_paths = paths
-
-    if best_matching is None or min_total_weight == float('inf'):
-        print("❌ No valid perfect matching found — some odd vertices are disconnected.")
-        return
+    for u, v in best_matching:
+        try:
+            length = nx.dijkstra_path_length(G, u, v, weight='weight')
+            path = nx.dijkstra_path(G, u, v, weight='weight')
+            min_total_weight += length
+            best_paths.append((u, v, path, length))
+        except nx.NetworkXNoPath:
+            print(f"❌ No path found between {u} and {v}")
+            print("❌ Matching is invalid.")
+            return
 
     print("\n✅ Best matching with minimum total added weight:")
     for u, v, path, length in best_paths:
@@ -170,6 +161,8 @@ def print_postman_chinese_solution(G,start_node):
     print_degree_distribution(G_aug)
     # Step 6: Compute total cost
     chinese_postman_total_cost = original_total_weight + min_total_weight
+
+    print(f"\n✅ Chinese Postman Route original total weight: {original_total_weight}")
     print(f"\n✅ Chinese Postman Route total cost: {chinese_postman_total_cost}")
 
     # Step 7: Find Eulerian circuit in augmented graph
@@ -183,6 +176,7 @@ def print_postman_chinese_solution(G,start_node):
         print("\n🗺️ Chinese Postman Route (Eulerian Circuit):")
         print(" → ".join(route))
         print(f"✅ Starts and ends at: {start_node}")
+        print(f"We traverse {len(route)} times")
         visualize_graph(G_aug,route,start_node)
     except nx.NetworkXError as e:
         print("⚠️ Error finding Eulerian circuit:", e)
@@ -213,21 +207,6 @@ def visualize_graph(G, route=None, starting_node=None):
             arrows='',  # no arrow for base edges
             color="#999"  # gray base edge
         )
-
-    # Add route arrows if given
-    if route:
-        for idx in range(len(route) - 1):
-            u, v = route[idx], route[idx + 1]
-            visit_num = idx + 1
-            net.add_edge(
-                u, v,
-                label=str(visit_num),  # show visit order above arrow
-                title=f"Step {visit_num}: {u} → {v}",
-                color="orange",
-                arrows="to",
-                width=3,
-                smooth={'type': 'curvedCW', 'roundness': 0.3}
-            )
 
     output_file = "graph_with_weights_and_route.html"
     net.save_graph(output_file)
