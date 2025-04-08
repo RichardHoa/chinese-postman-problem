@@ -40,7 +40,7 @@ def main():
         global current_graph
         size = size_var.get()
         current_graph = graph.generate_graph(size)
-        graph.visualize_graph(current_graph)
+        graph.visualize_graph(current_graph,route=None,starting_node=None)
 
         # Update the starting node dropdown with available nodes
         node_list = list(current_graph.nodes())
@@ -61,7 +61,11 @@ def main():
     def set_starting_node():
         node = starting_node_var.get()
         if node in current_graph.nodes:
-            graph.visualize_graph(current_graph, starting_node=node)
+            graph.visualize_graph(current_graph,route=None, starting_node=node)
+        print("-" * 20)
+        print("-" * 20)
+        print("Post man chinese text")
+        graph.print_postman_chinese_solution(current_graph,start_node=node)
 
     # Create UI using Tkinter
     root = tk.Tk()

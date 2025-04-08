@@ -2,16 +2,18 @@ import networkx as nx
 import random
 from pyvis.network import Network
 import os
+import itertools
+from collections import defaultdict
 
 # List of 50 unique locations
-locations = [f"Location {i+1}" for i in range(500)]
+locations = [f"Location {i+1}" for i in range(50)]
 
 # Graph size options
-graph_sizes = {"small": 10, "medium": 25, "large": 50,"gigantic":500}
+graph_sizes = {"small": 10, "medium": 25, "large": 50}
 
-CHANCES = 0.9
+CHANCES = 0.5
 
-MAX_DEGREE = 500
+MAX_DEGREE = 3
 
 def generate_graph(size, max_degree=MAX_DEGREE):
     """Generates a connected graph with controlled max degree."""
@@ -83,38 +85,143 @@ def print_degree_distribution(G):
         percentage = round((count / total_nodes) * 100)  # Round up percentage
         print(f"{count} nodes have {degree} edges ({percentage}%)")
 
+def all_pairings(odd_vertices):
+    if len(odd_vertices) % 2 != 0:
+        raise ValueError("Number of odd vertices must be even.")
+    if len(odd_vertices) == 0:
+        return [[]]
+
+    pairings = []
+    first = odd_vertices[0]
+    for i in range(1, len(odd_vertices)):
+        rest = odd_vertices[1:i] + odd_vertices[i+1:]
+        for subpair in all_pairings(rest):
+            pairings.append([(first, odd_vertices[i])] + subpair)
+    return pairings
+
+def print_postman_chinese_solution(G,start_node):
+    original_total_weight = sum(data['weight'] for u, v, data in G.edges(data=True))
+    print(f"Original graph total weight: {original_total_weight}")
+
+    # Step 1: Find odd-degree vertices
+    odd_vertices = [v for v in G.nodes() if G.degree[v] % 2 == 1]
+    print("Odd vertices:", odd_vertices)
+
+    if len(odd_vertices) == 0:
+        print("✅ Graph already has all even-degree vertices → Eulerian circuit exists!")
+        try:
+            circuit = list(nx.eulerian_circuit(G))
+            if not circuit:
+                print("⚠️ No Eulerian circuit found.")
+                return
+            route = [circuit[0][0]] + [v for _, v in circuit]
+            print("\n🗺️ Eulerian Circuit:")
+            print(" → ".join(route))
+            print(f"Total cost: {original_total_weight}")
+        except nx.NetworkXError as e:
+            print("⚠️ Error finding Eulerian circuit:", e)
+        return
+
+    # Step 2: Get all perfect matchings
+    matchings = all_pairings(odd_vertices)
+
+    # Step 3–4: Find matching with minimum total shortest path weight
+    min_total_weight = float('inf')
+    best_matching = None
+    best_paths = []
+
+    for matching in matchings:
+        total_weight = 0
+        paths = []
+        for u, v in matching:
+            try:
+                length = nx.dijkstra_path_length(G, u, v, weight='weight')
+                path = nx.dijkstra_path(G, u, v, weight='weight')
+                total_weight += length
+                paths.append((u, v, path, length))
+            except nx.NetworkXNoPath:
+                total_weight = float('inf')
+                break
+        if total_weight < min_total_weight:
+            min_total_weight = total_weight
+            best_matching = matching
+            best_paths = paths
+
+    if best_matching is None or min_total_weight == float('inf'):
+        print("❌ No valid perfect matching found — some odd vertices are disconnected.")
+        return
+
+    print("\n✅ Best matching with minimum total added weight:")
+    for u, v, path, length in best_paths:
+        print(f"  Path from {u} to {v} (length {length}): {path}")
+    print(f"Total added weight: {min_total_weight}")
+
+    # Step 5: Add shortest paths as multiedges
+    G_aug = nx.MultiGraph(G)
+    for u, v, path, _ in best_paths:
+        for i in range(len(path) - 1):
+            u1, v1 = path[i], path[i + 1]
+            if G_aug.has_edge(u1, v1):
+                weight = G[u1][v1]['weight']
+                G_aug.add_edge(u1, v1, weight=weight)  # Add duplicate of existing edge
+            else:
+                print(f"⚠️ Trying to add a non-existent edge: {u1} — {v1}")
+
+    print_degree_distribution(G_aug)
+    # Step 6: Compute total cost
+    chinese_postman_total_cost = original_total_weight + min_total_weight
+    print(f"\n✅ Chinese Postman Route total cost: {chinese_postman_total_cost}")
+
+    # Step 7: Find Eulerian circuit in augmented graph
+    # Assume `start_node` is passed in
+    try:
+        circuit = list(nx.eulerian_circuit(G_aug, source=start_node))
+        if not circuit:
+            print("⚠️ No Eulerian circuit found in the augmented graph.")
+            return
+        route = [circuit[0][0]] + [v for _, v in circuit]
+        print("\n🗺️ Chinese Postman Route (Eulerian Circuit):")
+        print(" → ".join(route))
+        print(f"✅ Starts and ends at: {start_node}")
+        visualize_graph(G_aug,route,start_node)
+    except nx.NetworkXError as e:
+        print("⚠️ Error finding Eulerian circuit:", e)
 
 # Function to visualize the graph
-def visualize_graph(G, starting_node=None):
-    """Visualizes the graph using Pyvis and ensures the HTML opens correctly."""
+def visualize_graph(G, route=None, starting_node=None):
+    # Step 1: Compute visit positions for each node (only if route is given)
+    position_map = defaultdict(list)
+    if route:
+        for idx, node in enumerate(route):
+            position_map[node].append(idx + 1)  # 1-based index
+
+    # Step 2: Create the graph
     net = Network(notebook=False)
-
-    # Spacing control
     net.force_atlas_2based(gravity=-100, central_gravity=0.0015)
-
-    # Disable physics for fixed edge lengths
     net.toggle_physics(False)
-
     net.show_buttons(filter_=['physics'])
 
     # Add nodes
     for node in G.nodes():
+        # Append visit order only if route exists
+        visits = position_map.get(node, [])
+        visits_str = f" ({', '.join(map(str, visits))})" if visits else ""
+        label = f"{node}{visits_str}"
+
+        # Highlight starting node if specified
         color = "red" if node == starting_node else "#1f78b4"
-        net.add_node(node, label=node, color=color)
+        net.add_node(node, label=label, color=color)
 
     # Add edges
     for u, v, data in G.edges(data=True):
         weight = data["weight"]
-        edge_length = max(10, weight * 5)  # Scale length, ensuring a minimum value
+        edge_length = max(10, weight * 5)
         net.add_edge(u, v, title=f"Length: {weight}", label=str(weight), length=edge_length, physics=False, smooth=False)
 
-    output_file = "graph.html"
+    # Save and open
+    output_file = "graph_with_visit_order.html"
     net.save_graph(output_file)
 
-    # Get absolute path
     file_path = f"file://{os.path.abspath(output_file)}"
-
-    # Open in Chrome
     chrome_path = "open -a 'Google Chrome'" if os.name == "posix" else "start chrome"
     os.system(f"{chrome_path} {file_path}")
-
