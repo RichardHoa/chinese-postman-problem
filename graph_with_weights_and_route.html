@@ -68,6 +68,57 @@
         
 
         <script type="text/javascript">
+                function customJs() {
+                    const cardDiv = document.querySelector('div.card[style="width: 100%"]');
+                    
+                    if (cardDiv) {
+                        const button = document.createElement("button");
+                        button.innerText = "Start Animation";
+                        button.style.position = "absolute";
+                        button.style.top = "10px";
+                        button.style.left = "10px";
+                        button.style.zIndex = "10";
+                        cardDiv.appendChild(button);
+
+                        button.addEventListener("click", function() {
+                            routesAnimation();
+                        });
+                    }
+                }
+
+                function routesAnimation() {
+                    const route = ["Location 62", "Location 73", "Location 58", "Location 79", "Location 58", "Location 71", "Location 13", "Location 71", "Location 79", "Location 62", "Location 97", "Location 83", "Location 62", "Location 19", "Location 73", "Location 19", "Location 83", "Location 79", "Location 83", "Location 58", "Location 13", "Location 83", "Location 100", "Location 97", "Location 100", "Location 13", "Location 62"];
+                    let nodes = network.body.data.nodes;
+
+                    let step = 0;
+
+                    const interval = setInterval(function() {
+                        if (step < route.length) {
+                            const currentNodeId = route[step];
+
+                            // Set all nodes (except current) that were already visited to gray
+                            if (step > 0) {
+                                const prevNodeId = route[step - 1];
+                                nodes.update({ id: prevNodeId, color: { background: 'gray' } });
+                            }
+
+                            // Highlight current node in red
+                            nodes.update({ id: currentNodeId, color: { background: 'red' } });
+
+                            step++;
+                        } else {
+                            // After the final step, also gray the last red node
+                            const lastNodeId = route[route.length - 1];
+                            nodes.update({ id: lastNodeId, color: { background: 'gray' } });
+                            clearInterval(interval);
+                        }
+                    }, 500);
+                }
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    customJs();
+                });
+            
 
               // initialize global variables.
               var edges;
@@ -96,8 +147,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#1f78b4", "id": "Location 6", "label": "Location 6", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 47", "label": "Location 47", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 15", "label": "Location 15", "shape": "dot"}, {"color": "red", "id": "Location 33", "label": "Location 33", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 43", "label": "Location 43", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 29", "label": "Location 29", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 10", "label": "Location 10", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 50", "label": "Location 50", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 12", "label": "Location 12", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 2", "label": "Location 2", "shape": "dot"}]);
-                  edges = new vis.DataSet([{"arrows": "to", "color": "#999", "from": "Location 6", "label": "1.4", "length": 10, "physics": false, "smooth": false, "title": "Weight: 1.4", "to": "Location 29"}, {"arrows": "to", "color": "#999", "from": "Location 6", "label": "9.4", "length": 47.0, "physics": false, "smooth": false, "title": "Weight: 9.4", "to": "Location 15"}, {"arrows": "to", "color": "#999", "from": "Location 6", "label": "8.7", "length": 43.5, "physics": false, "smooth": false, "title": "Weight: 8.7", "to": "Location 33"}, {"arrows": "to", "color": "#999", "from": "Location 6", "label": "8.5", "length": 42.5, "physics": false, "smooth": false, "title": "Weight: 8.5", "to": "Location 50"}, {"arrows": "to", "color": "#999", "from": "Location 47", "label": "6.7", "length": 33.5, "physics": false, "smooth": false, "title": "Weight: 6.7", "to": "Location 33"}, {"arrows": "to", "color": "#999", "from": "Location 47", "label": "6.2", "length": 31.0, "physics": false, "smooth": false, "title": "Weight: 6.2", "to": "Location 50"}, {"arrows": "to", "color": "#999", "from": "Location 47", "label": "5.6", "length": 28.0, "physics": false, "smooth": false, "title": "Weight: 5.6", "to": "Location 10"}, {"arrows": "to", "color": "#999", "from": "Location 47", "label": "2.2", "length": 11.0, "physics": false, "smooth": false, "title": "Weight: 2.2", "to": "Location 2"}, {"arrows": "to", "color": "#999", "from": "Location 15", "label": "7.2", "length": 36.0, "physics": false, "smooth": false, "title": "Weight: 7.2", "to": "Location 2"}, {"arrows": "to", "color": "#999", "from": "Location 15", "label": "1.1", "length": 10, "physics": false, "smooth": false, "title": "Weight: 1.1", "to": "Location 29"}, {"arrows": "to", "color": "#999", "from": "Location 15", "label": "9.9", "length": 49.5, "physics": false, "smooth": false, "title": "Weight: 9.9", "to": "Location 33"}, {"arrows": "to", "color": "#999", "from": "Location 15", "label": "9.9", "length": 49.5, "physics": false, "smooth": false, "title": "Weight: 9.9", "to": "Location 33"}, {"arrows": "to", "color": "#999", "from": "Location 15", "label": "2.5", "length": 12.5, "physics": false, "smooth": false, "title": "Weight: 2.5", "to": "Location 12"}, {"arrows": "to", "color": "#999", "from": "Location 33", "label": "5.7", "length": 28.5, "physics": false, "smooth": false, "title": "Weight: 5.7", "to": "Location 10"}, {"arrows": "to", "color": "#999", "from": "Location 33", "label": "2.2", "length": 11.0, "physics": false, "smooth": false, "title": "Weight: 2.2", "to": "Location 43"}, {"arrows": "to", "color": "#999", "from": "Location 43", "label": "6.0", "length": 30.0, "physics": false, "smooth": false, "title": "Weight: 6.0", "to": "Location 12"}, {"arrows": "to", "color": "#999", "from": "Location 43", "label": "4.2", "length": 21.0, "physics": false, "smooth": false, "title": "Weight: 4.2", "to": "Location 10"}, {"arrows": "to", "color": "#999", "from": "Location 43", "label": "5.8", "length": 29.0, "physics": false, "smooth": false, "title": "Weight: 5.8", "to": "Location 50"}, {"arrows": "to", "color": "#999", "from": "Location 10", "label": "4.9", "length": 24.5, "physics": false, "smooth": false, "title": "Weight: 4.9", "to": "Location 2"}, {"arrows": "to", "color": "#999", "from": "Location 50", "label": "1.4", "length": 10, "physics": false, "smooth": false, "title": "Weight: 1.4", "to": "Location 2"}]);
+                  nodes = new vis.DataSet([{"color": "#1f78b4", "id": "Location 100", "label": "Location 100", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 13", "label": "Location 13", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 83", "label": "Location 83", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 71", "label": "Location 71", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 19", "label": "Location 19", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 58", "label": "Location 58", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 97", "label": "Location 97", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 79", "label": "Location 79", "shape": "dot"}, {"color": "red", "id": "Location 62", "label": "Location 62", "shape": "dot"}, {"color": "#1f78b4", "id": "Location 73", "label": "Location 73", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"arrows": "", "color": "#999", "from": "Location 100", "label": "6.2", "length": 31.0, "physics": false, "smooth": false, "title": "Weight: 6.2", "to": "Location 97"}, {"arrows": "", "color": "#999", "from": "Location 100", "label": "6.2", "length": 31.0, "physics": false, "smooth": false, "title": "Weight: 6.2", "to": "Location 97"}, {"arrows": "", "color": "#999", "from": "Location 100", "label": "7.6", "length": 38.0, "physics": false, "smooth": false, "title": "Weight: 7.6", "to": "Location 83"}, {"arrows": "", "color": "#999", "from": "Location 100", "label": "7.7", "length": 38.5, "physics": false, "smooth": false, "title": "Weight: 7.7", "to": "Location 13"}, {"arrows": "", "color": "#999", "from": "Location 13", "label": "6.3", "length": 31.5, "physics": false, "smooth": false, "title": "Weight: 6.3", "to": "Location 58"}, {"arrows": "", "color": "#999", "from": "Location 13", "label": "6.6", "length": 33.0, "physics": false, "smooth": false, "title": "Weight: 6.6", "to": "Location 71"}, {"arrows": "", "color": "#999", "from": "Location 13", "label": "6.6", "length": 33.0, "physics": false, "smooth": false, "title": "Weight: 6.6", "to": "Location 71"}, {"arrows": "", "color": "#999", "from": "Location 13", "label": "8.2", "length": 41.0, "physics": false, "smooth": false, "title": "Weight: 8.2", "to": "Location 83"}, {"arrows": "", "color": "#999", "from": "Location 13", "label": "7.4", "length": 37.0, "physics": false, "smooth": false, "title": "Weight: 7.4", "to": "Location 62"}, {"arrows": "", "color": "#999", "from": "Location 83", "label": "1.5", "length": 10, "physics": false, "smooth": false, "title": "Weight: 1.5", "to": "Location 79"}, {"arrows": "", "color": "#999", "from": "Location 83", "label": "1.5", "length": 10, "physics": false, "smooth": false, "title": "Weight: 1.5", "to": "Location 79"}, {"arrows": "", "color": "#999", "from": "Location 83", "label": "9.8", "length": 49.0, "physics": false, "smooth": false, "title": "Weight: 9.8", "to": "Location 58"}, {"arrows": "", "color": "#999", "from": "Location 83", "label": "8.4", "length": 42.0, "physics": false, "smooth": false, "title": "Weight: 8.4", "to": "Location 19"}, {"arrows": "", "color": "#999", "from": "Location 83", "label": "3.8", "length": 19.0, "physics": false, "smooth": false, "title": "Weight: 3.8", "to": "Location 62"}, {"arrows": "", "color": "#999", "from": "Location 83", "label": "2.6", "length": 13.0, "physics": false, "smooth": false, "title": "Weight: 2.6", "to": "Location 97"}, {"arrows": "", "color": "#999", "from": "Location 71", "label": "8.5", "length": 42.5, "physics": false, "smooth": false, "title": "Weight: 8.5", "to": "Location 79"}, {"arrows": "", "color": "#999", "from": "Location 71", "label": "8.6", "length": 43.0, "physics": false, "smooth": false, "title": "Weight: 8.6", "to": "Location 58"}, {"arrows": "", "color": "#999", "from": "Location 19", "label": "5.1", "length": 25.5, "physics": false, "smooth": false, "title": "Weight: 5.1", "to": "Location 73"}, {"arrows": "", "color": "#999", "from": "Location 19", "label": "5.1", "length": 25.5, "physics": false, "smooth": false, "title": "Weight: 5.1", "to": "Location 73"}, {"arrows": "", "color": "#999", "from": "Location 19", "label": "5.3", "length": 26.5, "physics": false, "smooth": false, "title": "Weight: 5.3", "to": "Location 62"}, {"arrows": "", "color": "#999", "from": "Location 58", "label": "7.2", "length": 36.0, "physics": false, "smooth": false, "title": "Weight: 7.2", "to": "Location 73"}, {"arrows": "", "color": "#999", "from": "Location 58", "label": "3.0", "length": 15.0, "physics": false, "smooth": false, "title": "Weight: 3.0", "to": "Location 79"}, {"arrows": "", "color": "#999", "from": "Location 58", "label": "3.0", "length": 15.0, "physics": false, "smooth": false, "title": "Weight: 3.0", "to": "Location 79"}, {"arrows": "", "color": "#999", "from": "Location 97", "label": "9.3", "length": 46.5, "physics": false, "smooth": false, "title": "Weight: 9.3", "to": "Location 62"}, {"arrows": "", "color": "#999", "from": "Location 79", "label": "3.2", "length": 16.0, "physics": false, "smooth": false, "title": "Weight: 3.2", "to": "Location 62"}, {"arrows": "", "color": "#999", "from": "Location 62", "label": "9.3", "length": 46.5, "physics": false, "smooth": false, "title": "Weight: 9.3", "to": "Location 73"}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });

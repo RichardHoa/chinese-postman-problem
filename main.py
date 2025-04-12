@@ -63,10 +63,6 @@ def main():
     # Function to set the starting node
     def set_starting_node():
         node = starting_node_var.get()
-        if node in current_graph.nodes:
-            graph.visualize_graph(current_graph,route=None, starting_node=node)
-        print("-" * 20)
-        print("Post man chinese text")
         graph.print_postman_chinese_solution(current_graph,start_node=node)
 
     # Create UI using Tkinter

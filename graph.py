@@ -5,16 +5,18 @@ import os
 import itertools
 from collections import defaultdict
 from networkx.algorithms.matching import min_weight_matching
+import json
+from collections import defaultdict
 
 # List of 50 unique locations
-locations = [f"Location {i+1}" for i in range(50)]
+locations = [f"Location {i+1}" for i in range(100)]
 
 # Graph size options
 graph_sizes = {"small": 10, "medium": 25, "large": 50}
 
 CHANCES = 0.5
 
-MAX_DEGREE = 5
+MAX_DEGREE = 10
 
 def generate_weight_for_node():
     return round(random.uniform(1.0, 10.0), 1)
@@ -103,7 +105,6 @@ def get_best_matching(G, odd_vertices):
             complete_graph.add_edge(u, v, weight=shortest_length)
         except nx.NetworkXNoPath:
             continue  # skip disconnected pairs
-
     #  Step 2: pair up all the odd-degree nodes into k/2 
     #   pairs such that the total cost (shortest path lengths) is as small as possible.
     matching = min_weight_matching(complete_graph)
@@ -151,9 +152,9 @@ def print_postman_chinese_solution(G,start_node):
             print("❌ Matching is invalid.")
             return
 
-    print("\n Best matching with minimum total added weight:")
+    print("\n best matching with minimum total added weight:")
     for u, v, path, length in best_paths:
-        print(f"  Path from {u} to {v}: length {length}; {path}")
+        print(f"  path from {u} to {v}: length {length}; {path}")
     print(f"Total added weight: {min_total_weight}")
 
     # Step 5: Add shortest paths as multiedges
@@ -178,20 +179,23 @@ def print_postman_chinese_solution(G,start_node):
     print(f"\nChinese Postman Route original total weight: {original_total_weight}")
     print(f"Chinese Postman Route total cost: {chinese_postman_total_cost}")
 
+
     # Step 7: Find Eulerian circuit in augmented graph
-    # Assume `start_node` is passed in
     try:
         circuit = list(nx.eulerian_circuit(G_aug, source=start_node))
         if not circuit:
             print("⚠️ No Eulerian circuit found in the augmented graph.")
             return
         route = [circuit[0][0]] + [v for _, v in circuit]
-        print("\n🗺️ Chinese Postman Route (Eulerian Circuit):")
-        print(" → ".join(route))
-        print(f"We traverse {len(route)} times")
+        print_stats(route)
         visualize_graph(G_aug,route,start_node)
     except nx.NetworkXError as e:
         print("⚠️ Error finding Eulerian circuit:", e)
+
+def print_stats(route):
+    print("\n🗺️ Chinese Postman Route (Eulerian Circuit):")
+    print(" → ".join(route))
+    print(f"We traverse {len(route)} times")
 
 # Function to visualize the graph
 def visualize_graph(G, route=None, starting_node=None):
@@ -212,9 +216,6 @@ def visualize_graph(G, route=None, starting_node=None):
         color = "red" if node == starting_node else "#1f78b4"
         net.add_node(node, label=str(node), color=color)
 
-    if(route):
-        print("We have a route")
-
     # Add base edges WITH weight labels
     for u, v, data in G.edges(data=True):
         weight = data["weight"]
@@ -226,11 +227,81 @@ def visualize_graph(G, route=None, starting_node=None):
             length=edge_length,
             physics=False,
             smooth=False,
+            arrows='', 
             color="#999"  # gray base edge
         )
 
     output_file = "graph_with_weights_and_route.html"
-    net.save_graph(output_file)
+    net.write_html(output_file)
+
+    # Now modify the generated HTML file to add the JavaScript for route logging
+    if route:
+        # Load the saved HTML file
+        with open(output_file, "r") as f:
+            html_content = f.read()
+
+        # Find the position of the <script> tag and append the new code
+        script_pos = html_content.find("<script type=\"text/javascript\">")
+        if script_pos != -1:
+            # Create a custom function to log the route
+            js_function = f"""
+                function customJs() {{
+                    const cardDiv = document.querySelector('div.card[style="width: 100%"]');
+                    
+                    if (cardDiv) {{
+                        const button = document.createElement("button");
+                        button.innerText = "Start Animation";
+                        button.style.position = "absolute";
+                        button.style.top = "10px";
+                        button.style.left = "10px";
+                        button.style.zIndex = "10";
+                        cardDiv.appendChild(button);
+
+                        button.addEventListener("click", function() {{
+                            routesAnimation();
+                        }});
+                    }}
+                }}
+
+                function routesAnimation() {{
+                    const route = {json.dumps(route)};
+                    let nodes = network.body.data.nodes;
+
+                    let step = 0;
+
+                    const interval = setInterval(function() {{
+                        if (step < route.length) {{
+                            const currentNodeId = route[step];
+
+                            // Set all nodes (except current) that were already visited to gray
+                            if (step > 0) {{
+                                const prevNodeId = route[step - 1];
+                                nodes.update({{ id: prevNodeId, color: {{ background: 'gray' }} }});
+                            }}
+
+                            // Highlight current node in red
+                            nodes.update({{ id: currentNodeId, color: {{ background: 'red' }} }});
+
+                            step++;
+                        }} else {{
+                            // After the final step, also gray the last red node
+                            const lastNodeId = route[route.length - 1];
+                            nodes.update({{ id: lastNodeId, color: {{ background: 'gray' }} }});
+                            clearInterval(interval);
+                        }}
+                    }}, 500);
+                }}
+
+                document.addEventListener("DOMContentLoaded", function() {{
+                    customJs();
+                }});
+            """
+            # Append the JavaScript function at the end of the <script> section
+            html_content = html_content[:script_pos + len("<script type=\"text/javascript\">")] + js_function + html_content[script_pos + len("<script type=\"text/javascript\">"):]
+
+            # Save the modified HTML file
+            with open(output_file, "w") as f:
+                f.write(html_content)
 
     file_path = f"file://{os.path.abspath(output_file)}"
     chrome_path = "open -a 'Firefox'" if os.name == "posix" else "start Firefox"
