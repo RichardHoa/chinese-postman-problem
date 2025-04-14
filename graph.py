@@ -9,7 +9,66 @@ import json
 from collections import defaultdict
 
 # List of 50 unique locations
-locations = [f"Location {i+1}" for i in range(100)]
+locations = [
+  "Cơm Tấm Ba Ghiền",
+    "Bún Bò Huế O Xuân",
+    "Phở Lệ",
+    "Bún Thịt Nướng Chị Thông",
+    "Cơm Niêu Sài Gòn",
+    "Cơm Gà Xối Mỡ Su Su",
+    "Hẻm Spaghetti",
+    "Nhà Hàng Ngon",
+    "Cơm Gà Hải Nam Đông Nguyên",
+    "Ốc Đào",
+
+    # Quán Buffet – Nướng – Lẩu
+    "Gogi House",
+    "Papas’ BBQ",
+    "King BBQ",
+    "Hotpot Story",
+    "Manwah – Taiwanese Hotpot",
+    "Lẩu Băng Chuyền Kichi-Kichi",
+    "Food House",
+    "59 Lẩu Cá Kèo",
+    "Buffet Hương Rừng",
+    "Bangkok BBQ Buffet",
+
+    # Ẩm Thực Nhật – Hàn – Trung – Thái
+    "Sushi Hokkaido Sachi",
+    "Tasaki BBQ",
+    "Gyu-Kaku Japanese BBQ",
+    "Seoul Garden",
+    "Dim Tu Tac",
+    "Yau Hau Quan – Dimsum",
+    "TukTuk Thai Bistro",
+    "Thai Blah Blah",
+    "Hancook Korean Fast Food",
+    "Nara Thai Cuisine",
+
+    # Món Âu – Mỹ – Mexico
+    "Pizza 4P’s",
+    "El Gaucho Steakhouse",
+    "Au Parc Saigon",
+    "Chili’s American Grill & Bar",
+    "The Running Bean",
+    "The Vintage Emporium",
+    "Bep Me In",
+    "La Fiesta",
+    "Poke Saigon",
+    "Marcel Gourmet Burger",
+
+    # Ăn Vặt – Quán Bình Dân Hot
+    "Bánh Tráng Trộn Chị Huệ",
+    "Chè Hiển Khánh",
+    "Há Cảo Xíu Mại Cô Giang",
+    "Bánh Mì Huỳnh Hoa",
+    "Bánh Mì 37 Nguyễn Trãi",
+    "Hủ Tiếu Mực Ông Già Cali",
+    "Phá Lấu Lì",
+    "Ốc Khánh",
+    "Bánh Canh Cua Út Lệ",
+    "Bún Riêu Gánh Hàng Rong"
+]
 
 # Graph size options
 graph_sizes = {"small": 10, "medium": 25, "large": 50}
@@ -126,7 +185,7 @@ def print_postman_chinese_solution(G,start_node):
                 print("⚠️ No Eulerian circuit found.")
                 return
             route = [circuit[0][0]] + [v for _, v in circuit]
-            print("\n🗺️ Eulerian Circuit:")
+            print("\n Eulerian Circuit:")
             print(" → ".join(route))
             print(f"Total cost: {original_total_weight}")
         except nx.NetworkXError as e:
